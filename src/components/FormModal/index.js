@@ -1,0 +1,94 @@
+import React, { useContext, useState } from 'react';
+
+import GlobalContext from '../../contexts/globalContext';
+import { useApi } from '../../hooks/useApi';
+import { TextField, Modal, Typography, Button, Box, Grid } from '@mui/material';
+
+
+const style = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+};
+
+export const FormModal = () => {
+    const api = useApi();
+    const { complicatedState, dispatch } = useContext(GlobalContext);
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleEmailChange = ({ target }) => {
+        setEmail(target.value);
+    };
+
+    const handlePasswordChange = ({ target }) => {
+        setPassword(target.value);
+    };
+
+    const onSignIn = (signedInUser) => {
+        const { token, data } = signedInUser;
+        localStorage.setItem('token', JSON.stringify(token));
+        complicatedState.user = data;
+        dispatch({ type: 'close form' })
+    };
+
+    const signUp = () => {
+        api.signUp({ email, password })
+            .then((createdUser) => {
+                console.log({ createdUser });
+                return api.signIn({ email, password });
+            })
+            .then(onSignIn)
+    };
+
+    const signIn = () => {
+        api.signIn({ email, password })
+            .then(onSignIn)
+    }
+
+    return (
+        <Modal open={complicatedState.modalFormState.isOpen} aria-labelledby='modal-modal-title' aria-describedby='modal-modal-description'>
+            <Box sx={style}>
+                <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                        <Typography id='modal-modal-title' variant='h6' component='h2'>
+                            {complicatedState.modalFormState.msg}<br/>
+                            Введите ваши данные:
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField fullWidth label='Email' variant='outlined' required value={email} onChange={handleEmailChange} />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label='Password'
+                            type='password'
+                            variant='outlined'
+                            required
+                            value={password}
+                            onChange={handlePasswordChange}
+                        />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Button fullWidth variant='contained' color='primary' size='small' onClick={signUp}>
+                            Регистрация
+                        </Button>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Button fullWidth variant='contained' color='primary' size='small' onClick={signIn}>
+                            Логин
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Box>
+        </Modal>
+    );
+};
